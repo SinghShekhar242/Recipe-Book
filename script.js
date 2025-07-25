@@ -13,6 +13,11 @@ function renderRecipes(filtered = recipes) {
   const paginatedRecipes = filtered.slice(start, end);
 
   list.innerHTML = '';
+  if (paginatedRecipes.length === 0) {
+    list.innerHTML = '<p>No recipes found.</p>';
+    return;
+  }
+
   paginatedRecipes.forEach((recipe, index) => {
     const card = document.createElement('div');
     card.className = 'recipe-card';
@@ -41,7 +46,7 @@ function renderPagination(totalRecipes) {
   for (let i = 1; i <= totalPages; i++) {
     const btn = document.createElement('button');
     btn.textContent = i;
-    if (i === currentPage) btn.style.fontWeight = 'bold';
+    btn.className = (i === currentPage) ? 'active-page' : '';
     btn.onclick = () => {
       currentPage = i;
       applyFilters();
@@ -56,7 +61,7 @@ function showSection(id) {
   if (id === 'home-section') applyFilters();
 }
 
-document.getElementById('recipe-form').addEventListener('submit', function(e) {
+document.getElementById('recipe-form').addEventListener('submit', function (e) {
   e.preventDefault();
 
   const name = document.getElementById('recipe-name').value.trim();
@@ -69,9 +74,17 @@ document.getElementById('recipe-form').addEventListener('submit', function(e) {
   if (!name || !ingredients || !steps || !category || !type || !imageInput.files[0]) return;
 
   const reader = new FileReader();
-  reader.onload = function(event) {
-    const newRecipe = { name, ingredients, steps, image: event.target.result, category, type };
-    recipes.push(newRecipe);
+  reader.onload = function (event) {
+    const newRecipe = {
+      name,
+      ingredients,
+      steps,
+      image: event.target.result,
+      category,
+      type,
+      timestamp: Date.now()
+    };
+    recipes.unshift(newRecipe);
     saveRecipes();
     document.getElementById('recipe-form').reset();
     showSection('home-section');
@@ -114,6 +127,9 @@ function applyFilters() {
     );
   });
 
+  // Sort latest added first
+  filtered.sort((a, b) => b.timestamp - a.timestamp);
+
   currentPage = 1;
   renderRecipes(filtered);
 }
@@ -122,9 +138,4 @@ document.getElementById('search').addEventListener('input', applyFilters);
 document.getElementById('categoryFilter').addEventListener('change', applyFilters);
 document.getElementById('typeFilter').addEventListener('change', applyFilters);
 
-
 showSection('home-section');
-
-
-
-
